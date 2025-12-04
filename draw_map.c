@@ -1,0 +1,75 @@
+#include "fdf.h"
+#include <math.h>
+#include <stdlib.h>
+#include <mlx.h>
+void create_points(t_data *data)
+{
+    int y = 0;
+    int x;
+    data->points = malloc(sizeof(t_point*)*data->height);
+    while(y<data->height)
+    {
+        data->points[y] = malloc(sizeof(t_point)*data->width[y]);
+        x = 0;
+        while(x<data->width[y])
+        {
+            data->points[y][x].x = x;
+            data->points[y][x].y = y;
+            data->points[y][x].z = data->map[y][x];
+            data->points[y][x].color = 0xFFFFFF;
+
+        }
+    }
+}
+static void iso_project(t_point *point, int zoom, int offset_x, int offset_y)
+{
+    int x = point->x;
+    int y = point->y;
+    int z = point->z;
+    point->x = (x-y)*cos(0.523599) *zoom + offset_x;
+    point->y = (x+y)*sin(0.523599) * zoom - z * zoom / 2 + offset_y;
+
+}
+static void draw_line(void *mlx, void *win, t_point point_1, t_point point_2,int color)
+{
+    int dx = abs(point_2.x - point_1.x);
+    int dy = abs(point_2.y - point_1.y);
+    int sx = (point_1.x < point_2.x) ? 1 : -1;
+    int sy = (point_1.y < point_2.y) ? 1 : -1;
+    int err = dx - dy;
+
+    while (1)
+    {
+        mlx_pixel_put(mlx, win, point_1.x, point_1.y, color);
+        if (point_1.x == point_2.x && point_1.y == point_2.y)
+            break;
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; point_1.x += sx; }
+        if (e2 < dx) { err += dx; point_1.y += sy; }
+    }
+}
+void draw_map(t_mlx *mlx)
+{
+    for (int y = 0; y < mlx->data->height; y++)
+    {
+        for (int x = 0; x < mlx->data->width[y]; x++)
+        {
+            t_point p = mlx->data->points[y][x];
+            iso_project(&p, mlx->zoom, mlx->offset_x, mlx->offset_y);
+
+            if (x + 1 < mlx->data->width[y])
+            {
+                t_point right = mlx->data->points[y][x + 1];
+                iso_project(&right, mlx->zoom, mlx->offset_x, mlx->offset_y);
+                draw_line(mlx->mlx, mlx->win, p, right, p.color);
+            }
+
+            if (y + 1 < mlx->data->height)
+            {
+                t_point down = mlx->data->points[y + 1][x];
+                iso_project(&down, mlx->zoom, mlx->offset_x, mlx->offset_y);
+                draw_line(mlx->mlx, mlx->win, p, down, p.color);
+            }
+        }
+    }
+}

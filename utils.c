@@ -17,7 +17,7 @@ int invalid_file(char *file_name)
 }
 int ft_atoi(char *str)
 {
-    int res;
+    int res = 0;
     int i = 0;
     int sign = 1;
     if (str[i] == '-' || str[i] == '+')

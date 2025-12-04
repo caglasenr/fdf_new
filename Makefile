@@ -6,7 +6,8 @@ MLX_FLAGS = -Lminilibx-linux -lmlx -lXext -lX11 -lm
 SRCS = main.c \
        ft_split.c \
        utils.c \
-	   parse_map.c
+	   parse_map.c \
+	   draw_map.c 
 
 GNL_DIR = get_next_line/
 GNL_SRCS = $(GNL_DIR)get_next_line.c \
